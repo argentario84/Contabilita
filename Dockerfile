@@ -7,7 +7,7 @@ COPY client-app/ ./
 RUN npm run build
 
 # Build stage for .NET backend
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS backend-build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
 WORKDIR /src
 COPY src/Contabilita.Core/*.csproj Contabilita.Core/
 COPY src/Contabilita.Infrastructure/*.csproj Contabilita.Infrastructure/
@@ -17,7 +17,7 @@ COPY src/ ./
 RUN dotnet publish Contabilita.API/Contabilita.API.csproj -c Release -o /app/publish
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 COPY --from=backend-build /app/publish .
 COPY --from=frontend-build /app/client/dist ./wwwroot
