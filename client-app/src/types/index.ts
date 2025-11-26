@@ -33,6 +33,7 @@ export interface Category {
   icon?: string
   type: TransactionType
   monthlyBudget?: number
+  requireDescription: boolean
   spentThisMonth: number
   remainingBudget?: number
   budgetPercentageUsed?: number
@@ -45,6 +46,7 @@ export interface CreateCategory {
   icon?: string
   type: TransactionType
   monthlyBudget?: number
+  requireDescription?: boolean
 }
 
 export interface CategoryBudgetSummary {
@@ -131,6 +133,8 @@ export interface CalendarEvent {
   endDate?: string
   allDay: boolean
   color?: string
+  isShared: boolean
+  createdByName?: string
 }
 
 export interface CreateCalendarEvent {
@@ -140,4 +144,5 @@ export interface CreateCalendarEvent {
   endDate?: string
   allDay: boolean
   color?: string
+  isShared?: boolean
 }

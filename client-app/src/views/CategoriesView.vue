@@ -26,7 +26,8 @@ const form = ref({
   color: '#0d6efd',
   icon: 'bi-tag',
   type: TransactionType.Expense,
-  monthlyBudget: undefined as number | undefined
+  monthlyBudget: undefined as number | undefined,
+  requireDescription: false
 })
 
 onMounted(async () => {
@@ -45,7 +46,8 @@ function openModal(categoryId?: number) {
         color: c.color || '#0d6efd',
         icon: c.icon || 'bi-tag',
         type: c.type,
-        monthlyBudget: c.monthlyBudget
+        monthlyBudget: c.monthlyBudget,
+        requireDescription: c.requireDescription
       }
     }
   } else {
@@ -56,7 +58,8 @@ function openModal(categoryId?: number) {
       color: '#0d6efd',
       icon: 'bi-tag',
       type: TransactionType.Expense,
-      monthlyBudget: undefined
+      monthlyBudget: undefined,
+      requireDescription: false
     }
   }
   showModal.value = true
@@ -277,6 +280,21 @@ const expenseCategories = () => categoriesStore.categories.filter((c) => c.type 
                   />
                 </div>
                 <small class="text-muted">Imposta un limite di spesa mensile per questa categoria</small>
+              </div>
+
+              <div class="mb-3 form-check">
+                <input
+                  v-model="form.requireDescription"
+                  type="checkbox"
+                  class="form-check-input"
+                  id="requireDescription"
+                />
+                <label class="form-check-label" for="requireDescription">
+                  Descrizione obbligatoria
+                </label>
+                <div class="form-text">
+                  Se attivo, le transazioni di questa categoria richiederanno una descrizione
+                </div>
               </div>
 
               <div class="mb-3">

@@ -3,11 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTransactionsStore } from '@/stores/transactions'
 import { useScheduledExpensesStore } from '@/stores/scheduledExpenses'
+import { useCalendarEventsStore } from '@/stores/calendarEvents'
 import { TransactionType } from '@/types'
 
 const authStore = useAuthStore()
 const transactionsStore = useTransactionsStore()
 const scheduledStore = useScheduledExpensesStore()
+const calendarStore = useCalendarEventsStore()
 
 const loading = ref(true)
 
@@ -21,8 +23,16 @@ const endOfMonth = computed(() => {
   return new Date(now.getFullYear(), now.getMonth() + 1, 0)
 })
 
+const nextWeek = computed(() => {
+  const now = new Date()
+  const next = new Date(now)
+  next.setDate(next.getDate() + 7)
+  return next
+})
+
 onMounted(async () => {
   try {
+    const now = new Date()
     await Promise.all([
       transactionsStore.fetchSummary(
         currentMonth.value.toISOString(),
@@ -32,11 +42,20 @@ onMounted(async () => {
         startDate: currentMonth.value.toISOString(),
         endDate: endOfMonth.value.toISOString()
       }),
-      scheduledStore.fetchDueExpenses()
+      scheduledStore.fetchDueExpenses(),
+      calendarStore.fetchEvents(now.toISOString(), nextWeek.value.toISOString())
     ])
   } finally {
     loading.value = false
   }
+})
+
+const upcomingEvents = computed(() => {
+  const now = new Date()
+  return calendarStore.events
+    .filter(e => new Date(e.startDate) >= now)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .slice(0, 5)
 })
 
 const recentTransactions = computed(() =>
@@ -52,6 +71,22 @@ function formatCurrency(value: number) {
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('it-IT')
+}
+
+function formatDateTime(date: string) {
+  const d = new Date(date)
+  const today = new Date()
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const isToday = d.toDateString() === today.toDateString()
+  const isTomorrow = d.toDateString() === tomorrow.toDateString()
+
+  const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+
+  if (isToday) return `Oggi, ${timeStr}`
+  if (isTomorrow) return `Domani, ${timeStr}`
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }) + `, ${timeStr}`
 }
 
 async function confirmExpense(id: number) {
@@ -122,23 +157,7 @@ async function skipExpense(id: number) {
 
       <!-- Cards Riepilogo -->
       <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body">
-              <div class="d-flex justify-content-between">
-                <div>
-                  <p class="text-muted mb-1">Budget Attuale</p>
-                  <h3 class="mb-0">{{ formatCurrency(transactionsStore.summary?.currentBudget || 0) }}</h3>
-                </div>
-                <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                  <i class="bi bi-wallet2 text-primary fs-4"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-4">
           <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
               <div class="d-flex justify-content-between">
@@ -154,7 +173,7 @@ async function skipExpense(id: number) {
           </div>
         </div>
 
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-4">
           <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
               <div class="d-flex justify-content-between">
@@ -170,7 +189,7 @@ async function skipExpense(id: number) {
           </div>
         </div>
 
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-4">
           <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
               <div class="d-flex justify-content-between">
@@ -266,6 +285,54 @@ async function skipExpense(id: number) {
                     {{ transaction.type === TransactionType.Income ? '+' : '-' }}
                     {{ formatCurrency(transaction.amount) }}
                   </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prossimi Eventi -->
+      <div class="row g-4 mt-2">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-calendar-event me-2"></i>
+                Prossimi Eventi
+              </h5>
+              <RouterLink to="/calendar" class="btn btn-sm btn-outline-primary">
+                Vedi calendario
+              </RouterLink>
+            </div>
+            <div class="card-body p-0">
+              <div v-if="upcomingEvents.length === 0" class="text-center text-muted py-4">
+                Nessun evento nei prossimi 7 giorni
+              </div>
+              <div v-else class="list-group list-group-flush">
+                <div
+                  v-for="event in upcomingEvents"
+                  :key="event.id"
+                  class="list-group-item d-flex align-items-center"
+                >
+                  <div
+                    class="rounded-circle me-3"
+                    :style="{
+                      width: '12px',
+                      height: '12px',
+                      backgroundColor: event.color || '#0d6efd'
+                    }"
+                  ></div>
+                  <div class="flex-grow-1">
+                    <div class="fw-medium">
+                      <i v-if="event.isShared" class="bi bi-people-fill text-primary me-1" title="Evento condiviso"></i>
+                      {{ event.title }}
+                    </div>
+                    <small class="text-muted">
+                      {{ event.allDay ? formatDate(event.startDate) : formatDateTime(event.startDate) }}
+                      <span v-if="event.isShared && event.createdByName"> · {{ event.createdByName }}</span>
+                    </small>
+                  </div>
                 </div>
               </div>
             </div>

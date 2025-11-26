@@ -10,6 +10,7 @@ public class Category : BaseEntity
     public string? Icon { get; set; }
     public TransactionType Type { get; set; }
     public decimal? MonthlyBudget { get; set; }
+    public bool RequireDescription { get; set; } = false;
 
     public string UserId { get; set; } = string.Empty;
     public virtual ApplicationUser User { get; set; } = null!;

@@ -131,6 +131,7 @@ public class CategoriesController : ControllerBase
             Icon = model.Icon,
             Type = model.Type,
             MonthlyBudget = model.MonthlyBudget,
+            RequireDescription = model.RequireDescription,
             UserId = userId
         };
 
@@ -157,6 +158,7 @@ public class CategoriesController : ControllerBase
         if (model.Icon != null) category.Icon = model.Icon;
         if (model.Type.HasValue) category.Type = model.Type.Value;
         if (model.MonthlyBudget.HasValue) category.MonthlyBudget = model.MonthlyBudget;
+        if (model.RequireDescription.HasValue) category.RequireDescription = model.RequireDescription.Value;
 
         await _unitOfWork.Categories.UpdateAsync(category);
         await _unitOfWork.SaveChangesAsync();
@@ -204,6 +206,7 @@ public class CategoriesController : ControllerBase
             Icon = category.Icon,
             Type = category.Type,
             MonthlyBudget = category.MonthlyBudget,
+            RequireDescription = category.RequireDescription,
             SpentThisMonth = spentThisMonth,
             RemainingBudget = remaining,
             BudgetPercentageUsed = percentageUsed

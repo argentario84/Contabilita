@@ -12,6 +12,7 @@ public class CategoryDto
     public string? Icon { get; set; }
     public TransactionType Type { get; set; }
     public decimal? MonthlyBudget { get; set; }
+    public bool RequireDescription { get; set; }
     public decimal SpentThisMonth { get; set; }
     public decimal? RemainingBudget { get; set; }
     public decimal? BudgetPercentageUsed { get; set; }
@@ -37,6 +38,8 @@ public class CreateCategoryDto
 
     [Range(0, double.MaxValue)]
     public decimal? MonthlyBudget { get; set; }
+
+    public bool RequireDescription { get; set; } = false;
 }
 
 public class UpdateCategoryDto
@@ -57,6 +60,8 @@ public class UpdateCategoryDto
 
     [Range(0, double.MaxValue)]
     public decimal? MonthlyBudget { get; set; }
+
+    public bool? RequireDescription { get; set; }
 }
 
 public class CategoryBudgetSummaryDto

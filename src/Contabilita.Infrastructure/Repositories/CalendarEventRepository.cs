@@ -28,4 +28,24 @@ public class CalendarEventRepository : Repository<CalendarEvent>, ICalendarEvent
             .OrderBy(e => e.StartDate)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<CalendarEvent>> GetByUserIdOrSharedAsync(string userId)
+    {
+        return await _dbSet
+            .Include(e => e.User)
+            .Where(e => e.UserId == userId || e.IsShared)
+            .OrderBy(e => e.StartDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<CalendarEvent>> GetByUserIdOrSharedAndDateRangeAsync(string userId, DateTime startDate, DateTime endDate)
+    {
+        return await _dbSet
+            .Include(e => e.User)
+            .Where(e => (e.UserId == userId || e.IsShared) &&
+                       ((e.StartDate >= startDate && e.StartDate <= endDate) ||
+                        (e.EndDate.HasValue && e.EndDate >= startDate && e.EndDate <= endDate)))
+            .OrderBy(e => e.StartDate)
+            .ToListAsync();
+    }
 }

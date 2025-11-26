@@ -8,6 +8,7 @@ public class CalendarEvent : BaseEntity
     public DateTime? EndDate { get; set; }
     public bool AllDay { get; set; }
     public string? Color { get; set; }
+    public bool IsShared { get; set; } = false;
 
     public string UserId { get; set; } = string.Empty;
     public virtual ApplicationUser User { get; set; } = null!;

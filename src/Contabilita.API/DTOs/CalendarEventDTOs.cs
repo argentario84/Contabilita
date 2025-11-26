@@ -11,6 +11,8 @@ public class CalendarEventDto
     public DateTime? EndDate { get; set; }
     public bool AllDay { get; set; }
     public string? Color { get; set; }
+    public bool IsShared { get; set; }
+    public string? CreatedByName { get; set; }
 }
 
 public class CreateCalendarEventDto
@@ -31,6 +33,8 @@ public class CreateCalendarEventDto
 
     [MaxLength(20)]
     public string? Color { get; set; }
+
+    public bool IsShared { get; set; } = false;
 }
 
 public class UpdateCalendarEventDto
@@ -49,4 +53,6 @@ public class UpdateCalendarEventDto
 
     [MaxLength(20)]
     public string? Color { get; set; }
+
+    public bool? IsShared { get; set; }
 }

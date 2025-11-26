@@ -29,15 +29,15 @@ public class CalendarEventsController : ControllerBase
 
         if (startDate.HasValue && endDate.HasValue)
         {
-            events = await _unitOfWork.CalendarEvents.GetByUserIdAndDateRangeAsync(
+            events = await _unitOfWork.CalendarEvents.GetByUserIdOrSharedAndDateRangeAsync(
                 userId, startDate.Value, endDate.Value);
         }
         else
         {
-            events = await _unitOfWork.CalendarEvents.GetByUserIdAsync(userId);
+            events = await _unitOfWork.CalendarEvents.GetByUserIdOrSharedAsync(userId);
         }
 
-        return Ok(events.Select(MapToDto));
+        return Ok(events.Select(e => MapToDto(e, userId)));
     }
 
     [HttpGet("{id}")]
@@ -46,12 +46,12 @@ public class CalendarEventsController : ControllerBase
         var userId = GetUserId();
         var calendarEvent = await _unitOfWork.CalendarEvents.GetByIdAsync(id);
 
-        if (calendarEvent == null || calendarEvent.UserId != userId)
+        if (calendarEvent == null || (calendarEvent.UserId != userId && !calendarEvent.IsShared))
         {
             return NotFound();
         }
 
-        return Ok(MapToDto(calendarEvent));
+        return Ok(MapToDto(calendarEvent, userId));
     }
 
     [HttpPost]
@@ -67,13 +67,14 @@ public class CalendarEventsController : ControllerBase
             EndDate = model.EndDate,
             AllDay = model.AllDay,
             Color = model.Color,
+            IsShared = model.IsShared,
             UserId = userId
         };
 
         await _unitOfWork.CalendarEvents.AddAsync(calendarEvent);
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = calendarEvent.Id }, MapToDto(calendarEvent));
+        return CreatedAtAction(nameof(GetById), new { id = calendarEvent.Id }, MapToDto(calendarEvent, userId));
     }
 
     [HttpPut("{id}")]
@@ -93,11 +94,12 @@ public class CalendarEventsController : ControllerBase
         if (model.EndDate.HasValue) calendarEvent.EndDate = model.EndDate;
         if (model.AllDay.HasValue) calendarEvent.AllDay = model.AllDay.Value;
         if (model.Color != null) calendarEvent.Color = model.Color;
+        if (model.IsShared.HasValue) calendarEvent.IsShared = model.IsShared.Value;
 
         await _unitOfWork.CalendarEvents.UpdateAsync(calendarEvent);
         await _unitOfWork.SaveChangesAsync();
 
-        return Ok(MapToDto(calendarEvent));
+        return Ok(MapToDto(calendarEvent, userId));
     }
 
     [HttpDelete("{id}")]
@@ -121,7 +123,7 @@ public class CalendarEventsController : ControllerBase
         User.FindFirstValue(ClaimTypes.NameIdentifier) ??
         throw new UnauthorizedAccessException();
 
-    private static CalendarEventDto MapToDto(CalendarEvent calendarEvent) => new()
+    private static CalendarEventDto MapToDto(CalendarEvent calendarEvent, string currentUserId) => new()
     {
         Id = calendarEvent.Id,
         Title = calendarEvent.Title,
@@ -129,6 +131,10 @@ public class CalendarEventsController : ControllerBase
         StartDate = calendarEvent.StartDate,
         EndDate = calendarEvent.EndDate,
         AllDay = calendarEvent.AllDay,
-        Color = calendarEvent.Color
+        Color = calendarEvent.Color,
+        IsShared = calendarEvent.IsShared,
+        CreatedByName = calendarEvent.IsShared && calendarEvent.UserId != currentUserId
+            ? $"{calendarEvent.User?.FirstName} {calendarEvent.User?.LastName}".Trim()
+            : null
     };
 }

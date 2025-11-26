@@ -19,7 +19,8 @@ const form = ref({
   startDate: new Date().toISOString().split('T')[0] as string,
   endDate: undefined as string | undefined,
   allDay: true,
-  color: '#0d6efd'
+  color: '#0d6efd',
+  isShared: false
 })
 
 const colors = [
@@ -125,7 +126,8 @@ function openModal(date?: Date, eventId?: number) {
         startDate: e.startDate.split('T')[0] as string,
         endDate: e.endDate?.split('T')[0] as string | undefined,
         allDay: e.allDay,
-        color: e.color || '#0d6efd'
+        color: e.color || '#0d6efd',
+        isShared: e.isShared
       }
     }
   } else {
@@ -136,7 +138,8 @@ function openModal(date?: Date, eventId?: number) {
       startDate: (date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]) as string,
       endDate: undefined,
       allDay: true,
-      color: '#0d6efd'
+      color: '#0d6efd',
+      isShared: false
     }
   }
   showModal.value = true
@@ -242,7 +245,9 @@ function formatCurrency(value: number) {
                     :style="{ backgroundColor: event.color || '#0d6efd' }"
                     style="font-size: 0.7rem; cursor: pointer"
                     @click.stop="openModal(undefined, event.id)"
+                    :title="event.isShared && event.createdByName ? `Condiviso da ${event.createdByName}` : event.title"
                   >
+                    <i v-if="event.isShared" class="bi bi-people-fill me-1"></i>
                     {{ event.title }}
                   </div>
 
@@ -265,10 +270,14 @@ function formatCurrency(value: number) {
       </div>
 
       <!-- Legenda -->
-      <div class="mt-3 d-flex gap-4">
+      <div class="mt-3 d-flex gap-4 flex-wrap">
         <div class="d-flex align-items-center">
           <span class="badge bg-primary me-2">&nbsp;</span>
-          <small class="text-muted">Eventi</small>
+          <small class="text-muted">Eventi personali</small>
+        </div>
+        <div class="d-flex align-items-center">
+          <span class="badge bg-primary me-2"><i class="bi bi-people-fill"></i></span>
+          <small class="text-muted">Eventi condivisi</small>
         </div>
         <div class="d-flex align-items-center">
           <span class="badge bg-warning me-2">&nbsp;</span>
@@ -307,6 +316,22 @@ function formatCurrency(value: number) {
                   id="allDay"
                 />
                 <label class="form-check-label" for="allDay">Tutto il giorno</label>
+              </div>
+
+              <div class="mb-3 form-check">
+                <input
+                  v-model="form.isShared"
+                  type="checkbox"
+                  class="form-check-input"
+                  id="isShared"
+                />
+                <label class="form-check-label" for="isShared">
+                  <i class="bi bi-people me-1"></i>
+                  Evento condiviso
+                </label>
+                <div class="form-text">
+                  Se attivo, questo evento sarà visibile a tutti gli utenti
+                </div>
               </div>
 
               <div class="mb-3">
