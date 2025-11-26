@@ -180,6 +180,7 @@ export interface CreateCaregiver {
   color?: string
   phone?: string
   displayOrder?: number
+  isActive?: boolean
 }
 
 export interface ChildcareSlot {
