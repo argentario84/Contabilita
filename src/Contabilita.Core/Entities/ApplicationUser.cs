@@ -14,4 +14,6 @@ public class ApplicationUser : IdentityUser
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     public virtual ICollection<ScheduledExpense> ScheduledExpenses { get; set; } = new List<ScheduledExpense>();
     public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
+    public virtual ICollection<Caregiver> Caregivers { get; set; } = new List<Caregiver>();
+    public virtual ICollection<ChildcareSlot> ChildcareSlots { get; set; } = new List<ChildcareSlot>();
 }

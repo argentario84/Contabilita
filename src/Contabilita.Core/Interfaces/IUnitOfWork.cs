@@ -6,5 +6,7 @@ public interface IUnitOfWork : IDisposable
     ITransactionRepository Transactions { get; }
     IScheduledExpenseRepository ScheduledExpenses { get; }
     ICalendarEventRepository CalendarEvents { get; }
+    ICaregiverRepository Caregivers { get; }
+    IChildcareSlotRepository ChildcareSlots { get; }
     Task<int> SaveChangesAsync();
 }

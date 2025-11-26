@@ -104,6 +104,90 @@ namespace Contabilita.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Contabilita.Core.Entities.Caregiver", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Relationship")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Caregivers");
+                });
+
+            modelBuilder.Entity("Contabilita.Core.Entities.ChildcareSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("CaregiverId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TimeSlot")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("WeekStartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaregiverId");
+
+                    b.HasIndex("UserId", "WeekStartDate", "DayOfWeek", "TimeSlot")
+                        .IsUnique();
+
+                    b.ToTable("ChildcareSlots");
+                });
+
             modelBuilder.Entity("Contabilita.Core.Entities.CalendarEvent", b =>
                 {
                     b.Property<int>("Id")
@@ -438,6 +522,36 @@ namespace Contabilita.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Contabilita.Core.Entities.Caregiver", b =>
+                {
+                    b.HasOne("Contabilita.Core.Entities.ApplicationUser", "User")
+                        .WithMany("Caregivers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Contabilita.Core.Entities.ChildcareSlot", b =>
+                {
+                    b.HasOne("Contabilita.Core.Entities.Caregiver", "Caregiver")
+                        .WithMany("ChildcareSlots")
+                        .HasForeignKey("CaregiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Contabilita.Core.Entities.ApplicationUser", "User")
+                        .WithMany("ChildcareSlots")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Caregiver");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Contabilita.Core.Entities.CalendarEvent", b =>
                 {
                     b.HasOne("Contabilita.Core.Entities.ApplicationUser", "User")
@@ -560,11 +674,20 @@ namespace Contabilita.Infrastructure.Migrations
                 {
                     b.Navigation("CalendarEvents");
 
+                    b.Navigation("Caregivers");
+
                     b.Navigation("Categories");
+
+                    b.Navigation("ChildcareSlots");
 
                     b.Navigation("ScheduledExpenses");
 
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("Contabilita.Core.Entities.Caregiver", b =>
+                {
+                    b.Navigation("ChildcareSlots");
                 });
 
             modelBuilder.Entity("Contabilita.Core.Entities.Category", b =>

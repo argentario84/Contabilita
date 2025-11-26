@@ -10,6 +10,8 @@ public class UnitOfWork : IUnitOfWork
     private ITransactionRepository? _transactions;
     private IScheduledExpenseRepository? _scheduledExpenses;
     private ICalendarEventRepository? _calendarEvents;
+    private ICaregiverRepository? _caregivers;
+    private IChildcareSlotRepository? _childcareSlots;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -27,6 +29,12 @@ public class UnitOfWork : IUnitOfWork
 
     public ICalendarEventRepository CalendarEvents =>
         _calendarEvents ??= new CalendarEventRepository(_context);
+
+    public ICaregiverRepository Caregivers =>
+        _caregivers ??= new CaregiverRepository(_context);
+
+    public IChildcareSlotRepository ChildcareSlots =>
+        _childcareSlots ??= new ChildcareSlotRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

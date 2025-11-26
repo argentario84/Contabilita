@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useCalendarEventsStore } from '@/stores/calendarEvents'
 import { useScheduledExpensesStore } from '@/stores/scheduledExpenses'
-import type { CreateCalendarEvent, CalendarEvent } from '@/types'
+import type { CalendarEvent } from '@/types'
 
 const calendarStore = useCalendarEventsStore()
 const scheduledStore = useScheduledExpensesStore()
@@ -91,10 +91,19 @@ function goToToday() {
 }
 
 function getEventsForDay(date: Date): CalendarEvent[] {
-  const dateStr = date.toISOString().split('T')[0]
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const dateStr = `${year}-${month}-${day}`
+
   return calendarStore.events.filter((e) => {
-    const eventDate = e.startDate.split('T')[0]
-    return eventDate === dateStr
+    // Converti la data UTC in data locale per confronto
+    const eventDate = new Date(e.startDate)
+    const eventYear = eventDate.getFullYear()
+    const eventMonth = String(eventDate.getMonth() + 1).padStart(2, '0')
+    const eventDay = String(eventDate.getDate()).padStart(2, '0')
+    const eventDateStr = `${eventYear}-${eventMonth}-${eventDay}`
+    return eventDateStr === dateStr
   })
 }
 
@@ -146,10 +155,17 @@ function openModal(date?: Date, eventId?: number) {
 }
 
 async function saveEvent() {
+  // Converti la data stringa in ISO datetime per il backend
+  const payload = {
+    ...form.value,
+    startDate: new Date(form.value.startDate + 'T12:00:00').toISOString(),
+    endDate: form.value.endDate ? new Date(form.value.endDate + 'T12:00:00').toISOString() : undefined
+  }
+
   if (editingEvent.value) {
-    await calendarStore.updateEvent(editingEvent.value, form.value)
+    await calendarStore.updateEvent(editingEvent.value, payload)
   } else {
-    await calendarStore.createEvent(form.value)
+    await calendarStore.createEvent(payload)
   }
   showModal.value = false
   await loadEvents()

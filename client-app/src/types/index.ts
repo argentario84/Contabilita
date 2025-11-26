@@ -146,3 +146,60 @@ export interface CreateCalendarEvent {
   color?: string
   isShared?: boolean
 }
+
+// Childcare types
+export enum DayOfWeekEnum {
+  Monday = 1,
+  Tuesday = 2,
+  Wednesday = 3,
+  Thursday = 4,
+  Friday = 5,
+  Saturday = 6,
+  Sunday = 7
+}
+
+export enum TimeSlotEnum {
+  Morning = 1,
+  Afternoon = 2,
+  Evening = 3
+}
+
+export interface Caregiver {
+  id: number
+  name: string
+  relationship?: string
+  color?: string
+  phone?: string
+  displayOrder: number
+  isActive: boolean
+}
+
+export interface CreateCaregiver {
+  name: string
+  relationship?: string
+  color?: string
+  phone?: string
+  displayOrder?: number
+}
+
+export interface ChildcareSlot {
+  id: number
+  dayOfWeek: DayOfWeekEnum
+  timeSlot: TimeSlotEnum
+  weekStartDate: string
+  caregiverId: number
+  caregiverName: string
+  caregiverColor?: string
+}
+
+export interface CreateChildcareSlot {
+  dayOfWeek: DayOfWeekEnum
+  timeSlot: TimeSlotEnum
+  weekStartDate: string
+  caregiverId: number
+}
+
+export interface WeeklyChildcare {
+  weekStartDate: string
+  slots: ChildcareSlot[]
+}

@@ -15,6 +15,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<ScheduledExpense> ScheduledExpenses => Set<ScheduledExpense>();
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
+    public DbSet<Caregiver> Caregivers => Set<Caregiver>();
+    public DbSet<ChildcareSlot> ChildcareSlots => Set<ChildcareSlot>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -101,6 +103,37 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.UserId, e.StartDate });
+        });
+
+        builder.Entity<Caregiver>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            entity.Property(c => c.Relationship).HasMaxLength(50);
+            entity.Property(c => c.Color).HasMaxLength(20);
+            entity.Property(c => c.Phone).HasMaxLength(20);
+
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Caregivers)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ChildcareSlot>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+
+            entity.HasOne(s => s.Caregiver)
+                .WithMany(c => c.ChildcareSlots)
+                .HasForeignKey(s => s.CaregiverId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.User)
+                .WithMany(u => u.ChildcareSlots)
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(s => new { s.UserId, s.WeekStartDate, s.DayOfWeek, s.TimeSlot }).IsUnique();
         });
     }
 

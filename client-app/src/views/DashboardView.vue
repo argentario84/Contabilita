@@ -5,6 +5,7 @@ import { useTransactionsStore } from '@/stores/transactions'
 import { useScheduledExpensesStore } from '@/stores/scheduledExpenses'
 import { useCalendarEventsStore } from '@/stores/calendarEvents'
 import { TransactionType } from '@/types'
+import ChildcareWeekly from '@/components/ChildcareWeekly.vue'
 
 const authStore = useAuthStore()
 const transactionsStore = useTransactionsStore()
@@ -337,6 +338,13 @@ async function skipExpense(id: number) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Gestione Settimanale Bambina -->
+      <div class="row g-4 mt-2">
+        <div class="col-12">
+          <ChildcareWeekly />
         </div>
       </div>
     </template>
