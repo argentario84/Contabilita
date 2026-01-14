@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/services/api'
-import type { Transaction, CreateTransaction, TransactionSummary, TransactionType } from '@/types'
+import type { Transaction, CreateTransaction, TransactionSummary, TransactionType, BudgetPlanning } from '@/types'
 
 export const useTransactionsStore = defineStore('transactions', () => {
   const transactions = ref<Transaction[]>([])
   const summary = ref<TransactionSummary | null>(null)
+  const budgetPlanning = ref<BudgetPlanning | null>(null)
   const loading = ref(false)
 
   async function fetchTransactions(params?: {
@@ -32,6 +33,12 @@ export const useTransactionsStore = defineStore('transactions', () => {
     return response.data
   }
 
+  async function fetchBudgetPlanning() {
+    const response = await api.get<BudgetPlanning>('/transactions/budget-planning')
+    budgetPlanning.value = response.data
+    return response.data
+  }
+
   async function createTransaction(data: CreateTransaction) {
     const response = await api.post<Transaction>('/transactions', data)
     transactions.value.unshift(response.data)
@@ -55,9 +62,11 @@ export const useTransactionsStore = defineStore('transactions', () => {
   return {
     transactions,
     summary,
+    budgetPlanning,
     loading,
     fetchTransactions,
     fetchSummary,
+    fetchBudgetPlanning,
     createTransaction,
     updateTransaction,
     deleteTransaction

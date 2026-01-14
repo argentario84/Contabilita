@@ -123,6 +123,13 @@ public class AuthController : ControllerBase
         if (model.InitialBudget.HasValue) user.InitialBudget = model.InitialBudget.Value;
         if (model.MonthlyIncome.HasValue) user.MonthlyIncome = model.MonthlyIncome.Value;
 
+        // Budget Planning
+        if (model.SavingsGoalAmount.HasValue) user.SavingsGoalAmount = model.SavingsGoalAmount.Value;
+        if (model.SavingsGoalPercentage.HasValue) user.SavingsGoalPercentage = model.SavingsGoalPercentage.Value;
+        if (model.UseSavingsPercentage.HasValue) user.UseSavingsPercentage = model.UseSavingsPercentage.Value;
+        if (model.ExtraFixedExpenses.HasValue) user.ExtraFixedExpenses = model.ExtraFixedExpenses.Value;
+        if (model.BudgetAlertThreshold.HasValue) user.BudgetAlertThreshold = model.BudgetAlertThreshold.Value;
+
         var result = await _userManager.UpdateAsync(user);
 
         if (!result.Succeeded)
@@ -140,6 +147,11 @@ public class AuthController : ControllerBase
         FirstName = user.FirstName,
         LastName = user.LastName,
         InitialBudget = user.InitialBudget,
-        MonthlyIncome = user.MonthlyIncome
+        MonthlyIncome = user.MonthlyIncome,
+        SavingsGoalAmount = user.SavingsGoalAmount,
+        SavingsGoalPercentage = user.SavingsGoalPercentage,
+        UseSavingsPercentage = user.UseSavingsPercentage,
+        ExtraFixedExpenses = user.ExtraFixedExpenses,
+        BudgetAlertThreshold = user.BudgetAlertThreshold
     };
 }

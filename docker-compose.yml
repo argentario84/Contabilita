@@ -8,7 +8,7 @@ services:
     container_name: contabilita-app
     restart: always
     environment:
-      - ConnectionStrings__DefaultConnection=Server=192.168.1.220;Database=ContabilitaDb;User=maestrale;Password=Pilarella25!;
+      - ConnectionStrings__DefaultConnection=Server=192.168.1.220;Port=3306;Database=ContabilitaDb;User=maestrale;Password=myLongAndStrongPassword24!;
       - Jwt__Key=YourSuperSecretKeyThatIsAtLeast32CharactersLongForProduction!
       - Jwt__Issuer=ContabilitaAPI
       - Jwt__Audience=ContabilitaApp

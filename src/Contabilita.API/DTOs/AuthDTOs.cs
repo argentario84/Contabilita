@@ -47,6 +47,13 @@ public class UserDto
     public string LastName { get; set; } = string.Empty;
     public decimal InitialBudget { get; set; }
     public decimal MonthlyIncome { get; set; }
+
+    // Budget Planning
+    public decimal? SavingsGoalAmount { get; set; }
+    public decimal? SavingsGoalPercentage { get; set; }
+    public bool UseSavingsPercentage { get; set; }
+    public decimal? ExtraFixedExpenses { get; set; }
+    public decimal BudgetAlertThreshold { get; set; }
 }
 
 public class UpdateUserDto
@@ -55,4 +62,11 @@ public class UpdateUserDto
     public string? LastName { get; set; }
     public decimal? InitialBudget { get; set; }
     public decimal? MonthlyIncome { get; set; }
+
+    // Budget Planning
+    public decimal? SavingsGoalAmount { get; set; }
+    public decimal? SavingsGoalPercentage { get; set; }
+    public bool? UseSavingsPercentage { get; set; }
+    public decimal? ExtraFixedExpenses { get; set; }
+    public decimal? BudgetAlertThreshold { get; set; }
 }

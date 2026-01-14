@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/services/api'
-import type { User, AuthResponse } from '@/types'
+import type { User, AuthResponse, UpdateUser } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -38,7 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
     return response.data
   }
 
-  async function updateProfile(data: Partial<User>) {
+  async function updateProfile(data: UpdateUser) {
     const response = await api.put<User>('/auth/me', data)
     user.value = response.data
     localStorage.setItem('user', JSON.stringify(response.data))

@@ -8,7 +8,13 @@ const form = ref({
   firstName: '',
   lastName: '',
   initialBudget: 0,
-  monthlyIncome: 0
+  monthlyIncome: 0,
+  // Budget Planning
+  useSavingsPercentage: false,
+  savingsGoalAmount: 0,
+  savingsGoalPercentage: 0,
+  extraFixedExpenses: 0,
+  budgetAlertThreshold: 80
 })
 
 const saving = ref(false)
@@ -21,7 +27,12 @@ onMounted(() => {
       firstName: authStore.user.firstName,
       lastName: authStore.user.lastName,
       initialBudget: authStore.user.initialBudget,
-      monthlyIncome: authStore.user.monthlyIncome
+      monthlyIncome: authStore.user.monthlyIncome,
+      useSavingsPercentage: authStore.user.useSavingsPercentage || false,
+      savingsGoalAmount: authStore.user.savingsGoalAmount || 0,
+      savingsGoalPercentage: authStore.user.savingsGoalPercentage || 0,
+      extraFixedExpenses: authStore.user.extraFixedExpenses || 0,
+      budgetAlertThreshold: authStore.user.budgetAlertThreshold || 80
     }
   }
 })
@@ -108,7 +119,7 @@ async function saveSettings() {
                   </small>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label">Entrata Mensile</label>
+                  <label class="form-label">Entrata Mensile (Stipendio)</label>
                   <div class="input-group">
                     <span class="input-group-text">€</span>
                     <input
@@ -122,6 +133,97 @@ async function saveSettings() {
                     L'entrata mensile prevista (es. stipendio)
                   </small>
                 </div>
+              </div>
+
+              <hr />
+
+              <h6 class="mb-3">
+                <i class="bi bi-wallet2 me-2"></i>
+                Pianificazione Budget
+              </h6>
+
+              <!-- Obiettivo Risparmio -->
+              <div class="mb-3">
+                <label class="form-label">Obiettivo Risparmio Mensile</label>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    v-model="form.useSavingsPercentage"
+                    class="form-check-input"
+                    type="checkbox"
+                    id="useSavingsPercentage"
+                  />
+                  <label class="form-check-label" for="useSavingsPercentage">
+                    Usa percentuale dello stipendio
+                  </label>
+                </div>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div v-if="!form.useSavingsPercentage" class="input-group">
+                      <span class="input-group-text">€</span>
+                      <input
+                        v-model.number="form.savingsGoalAmount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="form-control"
+                        placeholder="Importo fisso"
+                      />
+                    </div>
+                    <div v-else class="input-group">
+                      <input
+                        v-model.number="form.savingsGoalPercentage"
+                        type="number"
+                        step="1"
+                        min="0"
+                        max="100"
+                        class="form-control"
+                        placeholder="Percentuale"
+                      />
+                      <span class="input-group-text">%</span>
+                    </div>
+                    <small class="text-muted">
+                      {{ form.useSavingsPercentage ? 'Percentuale dello stipendio da risparmiare' : 'Importo fisso mensile da mettere da parte' }}
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Spese Fisse Extra -->
+              <div class="mb-3">
+                <label class="form-label">Spese Fisse Extra</label>
+                <div class="input-group" style="max-width: 300px;">
+                  <span class="input-group-text">€</span>
+                  <input
+                    v-model.number="form.extraFixedExpenses"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    class="form-control"
+                  />
+                </div>
+                <small class="text-muted">
+                  Importo aggiuntivo alle spese programmate (es. spese non ricorrenti previste)
+                </small>
+              </div>
+
+              <!-- Soglia Alert -->
+              <div class="mb-4">
+                <label class="form-label">Soglia Alert Budget</label>
+                <div class="d-flex align-items-center">
+                  <input
+                    v-model.number="form.budgetAlertThreshold"
+                    type="range"
+                    class="form-range me-3"
+                    min="50"
+                    max="100"
+                    step="5"
+                    style="max-width: 300px;"
+                  />
+                  <span class="badge bg-warning fs-6">{{ form.budgetAlertThreshold }}%</span>
+                </div>
+                <small class="text-muted">
+                  Riceverai un avviso quando avrai speso oltre questa percentuale del budget disponibile
+                </small>
               </div>
 
               <div class="text-end">

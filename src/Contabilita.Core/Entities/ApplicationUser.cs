@@ -8,6 +8,14 @@ public class ApplicationUser : IdentityUser
     public string LastName { get; set; } = string.Empty;
     public decimal InitialBudget { get; set; }
     public decimal MonthlyIncome { get; set; }
+
+    // Budget Planning
+    public decimal? SavingsGoalAmount { get; set; }
+    public decimal? SavingsGoalPercentage { get; set; }
+    public bool UseSavingsPercentage { get; set; }
+    public decimal? ExtraFixedExpenses { get; set; }
+    public decimal BudgetAlertThreshold { get; set; } = 80;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();

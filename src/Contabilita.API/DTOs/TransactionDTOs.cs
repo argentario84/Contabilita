@@ -77,3 +77,19 @@ public class CategorySummaryDto
     public decimal Total { get; set; }
     public decimal Percentage { get; set; }
 }
+
+public class BudgetPlanningDto
+{
+    public decimal MonthlyIncome { get; set; }
+    public decimal ScheduledExpensesTotal { get; set; }
+    public decimal ExtraFixedExpenses { get; set; }
+    public decimal TotalFixedExpenses { get; set; }
+    public decimal SavingsGoal { get; set; }
+    public decimal AvailableBudget { get; set; }
+    public decimal SpentThisMonth { get; set; }
+    public decimal RemainingBudget { get; set; }
+    public decimal BudgetPercentageUsed { get; set; }
+    public decimal AlertThreshold { get; set; }
+    public bool IsOverThreshold { get; set; }
+    public bool IsOverBudget { get; set; }
+}

@@ -43,6 +43,7 @@ onMounted(async () => {
         startDate: currentMonth.value.toISOString(),
         endDate: endOfMonth.value.toISOString()
       }),
+      transactionsStore.fetchBudgetPlanning(),
       scheduledStore.fetchDueExpenses(),
       calendarStore.fetchEvents(now.toISOString(), nextWeek.value.toISOString())
     ])
@@ -101,6 +102,14 @@ async function confirmExpense(id: number) {
 async function skipExpense(id: number) {
   await scheduledStore.skipExpense(id)
 }
+
+const budgetProgressClass = computed(() => {
+  const bp = transactionsStore.budgetPlanning
+  if (!bp) return 'bg-success'
+  if (bp.isOverBudget) return 'bg-danger'
+  if (bp.isOverThreshold) return 'bg-warning'
+  return 'bg-success'
+})
 </script>
 
 <template>
@@ -210,6 +219,100 @@ async function skipExpense(id: number) {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Budget Planning -->
+      <div v-if="transactionsStore.budgetPlanning && authStore.user?.monthlyIncome" class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-wallet2 me-2"></i>
+            Pianificazione Budget
+          </h5>
+          <RouterLink to="/settings" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-gear"></i> Configura
+          </RouterLink>
+        </div>
+        <div class="card-body">
+          <!-- Alert se sopra soglia -->
+          <div v-if="transactionsStore.budgetPlanning.isOverBudget" class="alert alert-danger mb-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Attenzione!</strong> Hai superato il budget disponibile per spese variabili.
+          </div>
+          <div v-else-if="transactionsStore.budgetPlanning.isOverThreshold" class="alert alert-warning mb-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Hai usato il <strong>{{ transactionsStore.budgetPlanning.budgetPercentageUsed }}%</strong> del budget disponibile.
+            Rallenta le spese!
+          </div>
+
+          <!-- Flusso Budget -->
+          <div class="row text-center mb-4">
+            <div class="col">
+              <div class="text-muted small">Stipendio</div>
+              <div class="fs-5 fw-bold text-success">{{ formatCurrency(transactionsStore.budgetPlanning.monthlyIncome) }}</div>
+            </div>
+            <div class="col-auto d-flex align-items-center">
+              <i class="bi bi-arrow-right text-muted"></i>
+            </div>
+            <div class="col">
+              <div class="text-muted small">Spese Fisse</div>
+              <div class="fs-5 fw-bold text-danger">-{{ formatCurrency(transactionsStore.budgetPlanning.totalFixedExpenses) }}</div>
+            </div>
+            <div class="col-auto d-flex align-items-center">
+              <i class="bi bi-arrow-right text-muted"></i>
+            </div>
+            <div class="col">
+              <div class="text-muted small">Risparmio</div>
+              <div class="fs-5 fw-bold text-info">-{{ formatCurrency(transactionsStore.budgetPlanning.savingsGoal) }}</div>
+            </div>
+            <div class="col-auto d-flex align-items-center">
+              <i class="bi bi-arrow-right text-muted"></i>
+            </div>
+            <div class="col">
+              <div class="text-muted small">Disponibile</div>
+              <div class="fs-5 fw-bold" :class="transactionsStore.budgetPlanning.availableBudget >= 0 ? 'text-primary' : 'text-danger'">
+                {{ formatCurrency(transactionsStore.budgetPlanning.availableBudget) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Speso questo mese</span>
+              <span>
+                {{ formatCurrency(transactionsStore.budgetPlanning.spentThisMonth) }} / {{ formatCurrency(transactionsStore.budgetPlanning.availableBudget) }}
+              </span>
+            </div>
+            <div class="progress" style="height: 20px">
+              <div
+                class="progress-bar"
+                :class="budgetProgressClass"
+                :style="{ width: Math.min(transactionsStore.budgetPlanning.budgetPercentageUsed, 100) + '%' }"
+              >
+                {{ transactionsStore.budgetPlanning.budgetPercentageUsed }}%
+              </div>
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+              <small class="text-muted">0%</small>
+              <small class="text-muted">Soglia {{ transactionsStore.budgetPlanning.alertThreshold }}%</small>
+              <small class="text-muted">100%</small>
+            </div>
+          </div>
+
+          <!-- Rimanente -->
+          <div class="text-center">
+            <span class="text-muted">Budget rimanente: </span>
+            <span class="fs-4 fw-bold" :class="transactionsStore.budgetPlanning.remainingBudget >= 0 ? 'text-success' : 'text-danger'">
+              {{ formatCurrency(transactionsStore.budgetPlanning.remainingBudget) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messaggio se non configurato -->
+      <div v-else-if="!authStore.user?.monthlyIncome" class="alert alert-info mb-4">
+        <i class="bi bi-info-circle me-2"></i>
+        Configura il tuo stipendio mensile nelle <RouterLink to="/settings">Impostazioni</RouterLink> per visualizzare la pianificazione del budget.
       </div>
 
       <div class="row g-4">

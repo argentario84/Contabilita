@@ -113,6 +113,83 @@ public class TransactionsController : ControllerBase
         });
     }
 
+    [HttpGet("budget-planning")]
+    public async Task<ActionResult<BudgetPlanningDto>> GetBudgetPlanning()
+    {
+        var userId = GetUserId();
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user == null) return NotFound();
+
+        // Get current month date range
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+        var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+        // Calculate scheduled expenses total (monthly equivalent)
+        var scheduledExpenses = await _unitOfWork.ScheduledExpenses.GetByUserIdAsync(userId);
+        var scheduledExpensesTotal = scheduledExpenses
+            .Where(se => se.IsActive)
+            .Sum(se => se.Recurrence switch
+            {
+                RecurrenceType.Daily => se.Amount * 30,
+                RecurrenceType.Weekly => se.Amount * 4,
+                RecurrenceType.Monthly => se.Amount,
+                RecurrenceType.Yearly => se.Amount / 12,
+                _ => se.Amount
+            });
+
+        var extraFixedExpenses = user.ExtraFixedExpenses ?? 0;
+        var totalFixedExpenses = scheduledExpensesTotal + extraFixedExpenses;
+
+        // Calculate savings goal
+        decimal savingsGoal;
+        if (user.UseSavingsPercentage && user.SavingsGoalPercentage.HasValue)
+        {
+            savingsGoal = user.MonthlyIncome * (user.SavingsGoalPercentage.Value / 100);
+        }
+        else
+        {
+            savingsGoal = user.SavingsGoalAmount ?? 0;
+        }
+
+        // Available budget for variable expenses
+        var availableBudget = user.MonthlyIncome - totalFixedExpenses - savingsGoal;
+
+        // Get expenses this month (excluding scheduled expenses to avoid double counting)
+        var monthExpenses = await _unitOfWork.Transactions.GetByUserIdAndDateRangeAsync(
+            userId, startOfMonth, endOfMonth);
+
+        var spentThisMonth = monthExpenses
+            .Where(t => t.Type == TransactionType.Expense && t.ScheduledExpenseId == null)
+            .Sum(t => t.Amount);
+
+        var remainingBudget = availableBudget - spentThisMonth;
+        var budgetPercentageUsed = availableBudget > 0
+            ? Math.Round(spentThisMonth / availableBudget * 100, 2)
+            : 0;
+
+        var alertThreshold = user.BudgetAlertThreshold;
+        var isOverThreshold = budgetPercentageUsed >= alertThreshold;
+        var isOverBudget = spentThisMonth > availableBudget;
+
+        return Ok(new BudgetPlanningDto
+        {
+            MonthlyIncome = user.MonthlyIncome,
+            ScheduledExpensesTotal = scheduledExpensesTotal,
+            ExtraFixedExpenses = extraFixedExpenses,
+            TotalFixedExpenses = totalFixedExpenses,
+            SavingsGoal = savingsGoal,
+            AvailableBudget = availableBudget,
+            SpentThisMonth = spentThisMonth,
+            RemainingBudget = remainingBudget,
+            BudgetPercentageUsed = budgetPercentageUsed,
+            AlertThreshold = alertThreshold,
+            IsOverThreshold = isOverThreshold,
+            IsOverBudget = isOverBudget
+        });
+    }
+
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> Create([FromBody] CreateTransactionDto model)
     {

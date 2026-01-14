@@ -17,6 +17,12 @@ export interface User {
   lastName: string
   initialBudget: number
   monthlyIncome: number
+  // Budget Planning
+  savingsGoalAmount?: number
+  savingsGoalPercentage?: number
+  useSavingsPercentage: boolean
+  extraFixedExpenses?: number
+  budgetAlertThreshold: number
 }
 
 export interface AuthResponse {
@@ -203,4 +209,31 @@ export interface CreateChildcareSlot {
 export interface WeeklyChildcare {
   weekStartDate: string
   slots: ChildcareSlot[]
+}
+
+export interface BudgetPlanning {
+  monthlyIncome: number
+  scheduledExpensesTotal: number
+  extraFixedExpenses: number
+  totalFixedExpenses: number
+  savingsGoal: number
+  availableBudget: number
+  spentThisMonth: number
+  remainingBudget: number
+  budgetPercentageUsed: number
+  alertThreshold: number
+  isOverThreshold: boolean
+  isOverBudget: boolean
+}
+
+export interface UpdateUser {
+  firstName?: string
+  lastName?: string
+  initialBudget?: number
+  monthlyIncome?: number
+  savingsGoalAmount?: number
+  savingsGoalPercentage?: number
+  useSavingsPercentage?: boolean
+  extraFixedExpenses?: number
+  budgetAlertThreshold?: number
 }
