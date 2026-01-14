@@ -45,11 +45,30 @@ function logout() {
               Dashboard
             </RouterLink>
           </li>
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/transactions">
+          <li class="nav-item dropdown">
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+            >
               <i class="bi bi-cash-stack me-1"></i>
               Transazioni
-            </RouterLink>
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <RouterLink class="dropdown-item" to="/transactions">
+                  <i class="bi bi-list-ul me-2"></i>
+                  Lista
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink class="dropdown-item" to="/transactions-calendar">
+                  <i class="bi bi-calendar-week me-2"></i>
+                  Calendario
+                </RouterLink>
+              </li>
+            </ul>
           </li>
           <li class="nav-item">
             <RouterLink class="nav-link" to="/categories">
