@@ -1,46 +1,19 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: contabilita-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: ContabilitaDb
-      MYSQL_USER: contabilita_user
-      MYSQL_PASSWORD: contabilita_password
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - contabilita-network
-
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: contabilita-app
+    restart: always
     environment:
-      - ConnectionStrings__DefaultConnection=Server=mysql;Database=ContabilitaDb;User=contabilita_user;Password=contabilita_password;
+      - ConnectionStrings__DefaultConnection=Server=192.168.1.220;Database=ContabilitaDb;User=maestrale;Password=Pilarella25!;
       - Jwt__Key=YourSuperSecretKeyThatIsAtLeast32CharactersLongForProduction!
       - Jwt__Issuer=ContabilitaAPI
       - Jwt__Audience=ContabilitaApp
     ports:
       - "8080:80"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - contabilita-network
-
-volumes:
-  mysql_data:
 
 networks:
   contabilita-network:
