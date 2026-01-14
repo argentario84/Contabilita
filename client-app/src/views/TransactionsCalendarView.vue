@@ -20,6 +20,60 @@ const showModal = ref(false)
 const currentStart = ref<string>('')
 const currentEnd = ref<string>('')
 
+// Computed per il riepilogo
+const totalIncome = computed(() => {
+  return transactionsStore.transactions
+    .filter(t => t.type === TransactionType.Income)
+    .reduce((sum, t) => sum + t.amount, 0)
+})
+
+const totalExpenses = computed(() => {
+  return transactionsStore.transactions
+    .filter(t => t.type === TransactionType.Expense)
+    .reduce((sum, t) => sum + t.amount, 0)
+})
+
+const balance = computed(() => totalIncome.value - totalExpenses.value)
+
+// Riepilogo per categoria
+const expensesByCategory = computed(() => {
+  const categories: Record<number, { name: string; color: string; total: number }> = {}
+
+  transactionsStore.transactions
+    .filter(t => t.type === TransactionType.Expense)
+    .forEach(t => {
+      if (!categories[t.categoryId]) {
+        categories[t.categoryId] = {
+          name: t.categoryName,
+          color: t.categoryColor || '#6c757d',
+          total: 0
+        }
+      }
+      categories[t.categoryId]!.total += t.amount
+    })
+
+  return Object.values(categories).sort((a, b) => b.total - a.total)
+})
+
+const incomeByCategory = computed(() => {
+  const categories: Record<number, { name: string; color: string; total: number }> = {}
+
+  transactionsStore.transactions
+    .filter(t => t.type === TransactionType.Income)
+    .forEach(t => {
+      if (!categories[t.categoryId]) {
+        categories[t.categoryId] = {
+          name: t.categoryName,
+          color: t.categoryColor || '#198754',
+          total: 0
+        }
+      }
+      categories[t.categoryId]!.total += t.amount
+    })
+
+  return Object.values(categories).sort((a, b) => b.total - a.total)
+})
+
 onMounted(async () => {
   await scheduledStore.fetchScheduledExpenses(true)
   loading.value = false
@@ -184,6 +238,104 @@ function getRecurrenceLabel(scheduled: ScheduledExpense | undefined): string {
         <div class="d-flex align-items-center">
           <span class="badge bg-warning me-2">&nbsp;</span>
           <small class="text-muted">Spese Programmate</small>
+        </div>
+      </div>
+
+      <!-- Riepilogo Periodo -->
+      <div class="row mt-4 g-4">
+        <!-- Totali -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+              <h6 class="mb-0">
+                <i class="bi bi-calculator me-2"></i>
+                Riepilogo Periodo
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">Entrate</span>
+                <span class="fs-5 fw-bold text-success">+{{ formatAmount(totalIncome) }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">Uscite</span>
+                <span class="fs-5 fw-bold text-danger">-{{ formatAmount(totalExpenses) }}</span>
+              </div>
+              <hr />
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Bilancio</span>
+                <span class="fs-4 fw-bold" :class="balance >= 0 ? 'text-success' : 'text-danger'">
+                  {{ balance >= 0 ? '+' : '' }}{{ formatAmount(balance) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uscite per Categoria -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+              <h6 class="mb-0">
+                <i class="bi bi-pie-chart me-2 text-danger"></i>
+                Uscite per Categoria
+              </h6>
+            </div>
+            <div class="card-body">
+              <div v-if="expensesByCategory.length === 0" class="text-muted text-center py-3">
+                Nessuna uscita nel periodo
+              </div>
+              <div v-else>
+                <div
+                  v-for="cat in expensesByCategory"
+                  :key="cat.name"
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <div class="d-flex align-items-center">
+                    <span
+                      class="badge me-2"
+                      :style="{ backgroundColor: cat.color }"
+                    >&nbsp;</span>
+                    <span class="small">{{ cat.name }}</span>
+                  </div>
+                  <span class="fw-medium text-danger">-{{ formatAmount(cat.total) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Entrate per Categoria -->
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+              <h6 class="mb-0">
+                <i class="bi bi-pie-chart me-2 text-success"></i>
+                Entrate per Categoria
+              </h6>
+            </div>
+            <div class="card-body">
+              <div v-if="incomeByCategory.length === 0" class="text-muted text-center py-3">
+                Nessuna entrata nel periodo
+              </div>
+              <div v-else>
+                <div
+                  v-for="cat in incomeByCategory"
+                  :key="cat.name"
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <div class="d-flex align-items-center">
+                    <span
+                      class="badge me-2"
+                      :style="{ backgroundColor: cat.color }"
+                    >&nbsp;</span>
+                    <span class="small">{{ cat.name }}</span>
+                  </div>
+                  <span class="fw-medium text-success">+{{ formatAmount(cat.total) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </template>
