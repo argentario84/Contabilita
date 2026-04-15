@@ -3,6 +3,35 @@ export enum TransactionType {
   Expense = 2
 }
 
+export enum DebtCreditType {
+  Debt = 1,
+  Credit = 2
+}
+
+export interface DebtCredit {
+  id: number
+  type: DebtCreditType
+  personName: string
+  amount: number
+  description: string
+  dueDate: string | null
+  isSettled: boolean
+  settledAt: string | null
+  notes: string | null
+  createdAt: string
+  isOverdue: boolean
+  daysUntilDue: number | null
+}
+
+export interface CreateDebtCredit {
+  type: DebtCreditType
+  personName: string
+  amount: number
+  description: string
+  dueDate: string | null
+  notes: string | null
+}
+
 export enum RecurrenceType {
   Daily = 1,
   Weekly = 2,

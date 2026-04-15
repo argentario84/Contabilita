@@ -89,6 +89,18 @@ function logout() {
               Calendario
             </RouterLink>
           </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/statistics">
+              <i class="bi bi-bar-chart-line me-1"></i>
+              Statistiche
+            </RouterLink>
+          </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/debt-credits">
+              <i class="bi bi-arrow-left-right me-1"></i>
+              Debiti/Crediti
+            </RouterLink>
+          </li>
         </ul>
 
         <ul class="navbar-nav">

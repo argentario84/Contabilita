@@ -12,6 +12,7 @@ public class UnitOfWork : IUnitOfWork
     private ICalendarEventRepository? _calendarEvents;
     private ICaregiverRepository? _caregivers;
     private IChildcareSlotRepository? _childcareSlots;
+    private IDebtCreditRepository? _debtCredits;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -35,6 +36,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IChildcareSlotRepository ChildcareSlots =>
         _childcareSlots ??= new ChildcareSlotRepository(_context);
+
+    public IDebtCreditRepository DebtCredits =>
+        _debtCredits ??= new DebtCreditRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

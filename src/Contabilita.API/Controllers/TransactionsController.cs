@@ -38,18 +38,16 @@ public class TransactionsController : ControllerBase
             transactions = await _unitOfWork.Transactions.GetByUserIdAndDateRangeAsync(
                 userId, startDate.Value, endDate.Value);
         }
-        else if (categoryId.HasValue)
-        {
-            transactions = await _unitOfWork.Transactions.GetByUserIdAndCategoryAsync(userId, categoryId.Value);
-        }
-        else if (type.HasValue)
-        {
-            transactions = await _unitOfWork.Transactions.GetByUserIdAndTypeAsync(userId, type.Value);
-        }
         else
         {
             transactions = await _unitOfWork.Transactions.GetByUserIdAsync(userId);
         }
+
+        if (categoryId.HasValue)
+            transactions = transactions.Where(t => t.CategoryId == categoryId.Value);
+
+        if (type.HasValue)
+            transactions = transactions.Where(t => t.Type == type.Value);
 
         return Ok(transactions.Select(MapToDto));
     }
@@ -187,6 +185,123 @@ public class TransactionsController : ControllerBase
             AlertThreshold = alertThreshold,
             IsOverThreshold = isOverThreshold,
             IsOverBudget = isOverBudget
+        });
+    }
+
+    [HttpGet("statistics")]
+    public async Task<ActionResult<AdvancedStatisticsDto>> GetStatistics([FromQuery] int months = 12)
+    {
+        var userId = GetUserId();
+
+        var endDate = DateTime.UtcNow;
+        var startDate = new DateTime(endDate.AddMonths(-months + 1).Year, endDate.AddMonths(-months + 1).Month, 1);
+
+        var transactions = await _unitOfWork.Transactions.GetByUserIdAndDateRangeAsync(userId, startDate, endDate);
+        var txList = transactions.ToList();
+
+        var italianMonths = new[] { "", "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic" };
+
+        // Monthly trend
+        var monthlyTrend = new List<MonthlyTrendDto>();
+        var monthLabels = new List<string>();
+
+        for (int i = months - 1; i >= 0; i--)
+        {
+            var date = endDate.AddMonths(-i);
+            var monthStart = new DateTime(date.Year, date.Month, 1);
+            var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+            var monthTx = txList.Where(t => t.Date >= monthStart && t.Date <= monthEnd).ToList();
+            var income = monthTx.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
+            var expenses = monthTx.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
+
+            var label = $"{italianMonths[date.Month]} {date.Year}";
+            monthLabels.Add(label);
+            monthlyTrend.Add(new MonthlyTrendDto
+            {
+                Year = date.Year,
+                Month = date.Month,
+                MonthLabel = label,
+                Income = income,
+                Expenses = expenses,
+                Balance = income - expenses
+            });
+        }
+
+        // Top categories by total expense
+        var totalExpenses = txList.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
+        var topCategories = txList
+            .Where(t => t.Type == TransactionType.Expense)
+            .GroupBy(t => new { t.CategoryId, t.Category.Name, t.Category.Color })
+            .Select(g => new CategorySummaryDto
+            {
+                CategoryId = g.Key.CategoryId,
+                CategoryName = g.Key.Name,
+                CategoryColor = g.Key.Color,
+                Total = g.Sum(t => t.Amount),
+                Percentage = totalExpenses > 0 ? Math.Round(g.Sum(t => t.Amount) / totalExpenses * 100, 2) : 0
+            })
+            .OrderByDescending(c => c.Total)
+            .Take(10)
+            .ToList();
+
+        // Category monthly trend (top 5)
+        var categoryMonthlyTrend = topCategories.Take(5).Select(cat =>
+        {
+            var amounts = monthlyTrend.Select(m =>
+            {
+                var mStart = new DateTime(m.Year, m.Month, 1);
+                var mEnd = mStart.AddMonths(1).AddDays(-1);
+                return txList
+                    .Where(t => t.CategoryId == cat.CategoryId && t.Type == TransactionType.Expense && t.Date >= mStart && t.Date <= mEnd)
+                    .Sum(t => t.Amount);
+            }).ToList();
+
+            return new CategoryMonthlyTrendDto
+            {
+                CategoryId = cat.CategoryId,
+                CategoryName = cat.CategoryName,
+                CategoryColor = cat.CategoryColor,
+                MonthlyAmounts = amounts
+            };
+        }).ToList();
+
+        // Day of week stats
+        var dayNames = new[] { "Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab" };
+        var dayOfWeekStats = Enumerable.Range(0, 7).Select(d =>
+        {
+            var dayTx = txList.Where(t => t.Type == TransactionType.Expense && (int)t.Date.DayOfWeek == d).ToList();
+            return new DayOfWeekStatsDto
+            {
+                DayName = dayNames[d],
+                TotalExpense = dayTx.Sum(t => t.Amount),
+                TransactionCount = dayTx.Count,
+                AverageExpense = dayTx.Count > 0 ? Math.Round(dayTx.Sum(t => t.Amount) / dayTx.Count, 2) : 0
+            };
+        }).ToList();
+
+        // Averages and YTD
+        var avgMonthlyExpenses = monthlyTrend.Where(m => m.Expenses > 0).Select(m => m.Expenses).DefaultIfEmpty(0).Average();
+        var avgMonthlyIncome = monthlyTrend.Where(m => m.Income > 0).Select(m => m.Income).DefaultIfEmpty(0).Average();
+        var totalExpensesYTD = txList.Where(t => t.Type == TransactionType.Expense && t.Date.Year == endDate.Year).Sum(t => t.Amount);
+        var totalIncomeYTD = txList.Where(t => t.Type == TransactionType.Income && t.Date.Year == endDate.Year).Sum(t => t.Amount);
+
+        var bestMonth = monthlyTrend.OrderByDescending(m => m.Balance).FirstOrDefault()?.MonthLabel;
+        var worstMonth = monthlyTrend.OrderBy(m => m.Balance).FirstOrDefault()?.MonthLabel;
+
+        return Ok(new AdvancedStatisticsDto
+        {
+            MonthlyTrend = monthlyTrend,
+            TopCategories = topCategories,
+            CategoryMonthlyTrend = categoryMonthlyTrend,
+            DayOfWeekStats = dayOfWeekStats,
+            AverageMonthlyExpenses = Math.Round(avgMonthlyExpenses, 2),
+            AverageMonthlyIncome = Math.Round(avgMonthlyIncome, 2),
+            TotalExpensesYTD = totalExpensesYTD,
+            TotalIncomeYTD = totalIncomeYTD,
+            BestMonth = bestMonth,
+            WorstMonth = worstMonth,
+            MonthLabels = monthLabels
         });
     }
 

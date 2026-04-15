@@ -8,5 +8,6 @@ public interface IUnitOfWork : IDisposable
     ICalendarEventRepository CalendarEvents { get; }
     ICaregiverRepository Caregivers { get; }
     IChildcareSlotRepository ChildcareSlots { get; }
+    IDebtCreditRepository DebtCredits { get; }
     Task<int> SaveChangesAsync();
 }

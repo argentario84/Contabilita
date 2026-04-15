@@ -14,7 +14,8 @@ const editingTransaction = ref<number | null>(null)
 const filters = ref({
   startDate: '',
   endDate: '',
-  type: '' as '' | TransactionType
+  type: '' as '' | TransactionType,
+  categoryId: '' as '' | number
 })
 
 const form = ref({
@@ -47,6 +48,7 @@ async function loadTransactions() {
   if (filters.value.startDate) params.startDate = filters.value.startDate
   if (filters.value.endDate) params.endDate = filters.value.endDate
   if (filters.value.type) params.type = filters.value.type
+  if (filters.value.categoryId) params.categoryId = filters.value.categoryId
   await transactionsStore.fetchTransactions(params)
 }
 
@@ -96,6 +98,20 @@ async function deleteTransaction(id: number) {
   }
 }
 
+const totalIncome = computed(() =>
+  transactionsStore.transactions
+    .filter((t) => t.type === TransactionType.Income)
+    .reduce((sum, t) => sum + t.amount, 0)
+)
+
+const totalExpenses = computed(() =>
+  transactionsStore.transactions
+    .filter((t) => t.type === TransactionType.Expense)
+    .reduce((sum, t) => sum + t.amount, 0)
+)
+
+const balance = computed(() => totalIncome.value - totalExpenses.value)
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(value)
 }
@@ -122,21 +138,75 @@ function formatDate(date: string) {
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <div class="row g-3">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Data Inizio</label>
             <input v-model="filters.startDate" type="date" class="form-control" />
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Data Fine</label>
             <input v-model="filters.endDate" type="date" class="form-control" />
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Tipo</label>
             <select v-model="filters.type" class="form-select">
               <option value="">Tutti</option>
               <option :value="TransactionType.Income">Entrate</option>
               <option :value="TransactionType.Expense">Uscite</option>
             </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Categoria</label>
+            <select v-model="filters.categoryId" class="form-select">
+              <option value="">Tutte</option>
+              <option v-for="cat in categoriesStore.categories" :key="cat.id" :value="cat.id">
+                {{ cat.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totali filtrati -->
+    <div v-if="!loading" class="row g-3 mb-4">
+      <div class="col-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body py-3 d-flex align-items-center gap-3">
+            <div class="rounded-3 p-2 bg-success bg-opacity-10">
+              <i class="bi bi-arrow-up-circle-fill text-success fs-5"></i>
+            </div>
+            <div>
+              <p class="text-muted small mb-0">Entrate</p>
+              <p class="fw-bold text-success mb-0">+{{ formatCurrency(totalIncome) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body py-3 d-flex align-items-center gap-3">
+            <div class="rounded-3 p-2 bg-danger bg-opacity-10">
+              <i class="bi bi-arrow-down-circle-fill text-danger fs-5"></i>
+            </div>
+            <div>
+              <p class="text-muted small mb-0">Uscite</p>
+              <p class="fw-bold text-danger mb-0">-{{ formatCurrency(totalExpenses) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body py-3 d-flex align-items-center gap-3">
+            <div class="rounded-3 p-2" :class="balance >= 0 ? 'bg-primary bg-opacity-10' : 'bg-warning bg-opacity-10'">
+              <i class="bi bi-wallet2 fs-5" :class="balance >= 0 ? 'text-primary' : 'text-warning'"></i>
+            </div>
+            <div>
+              <p class="text-muted small mb-0">Saldo</p>
+              <p class="fw-bold mb-0" :class="balance >= 0 ? 'text-primary' : 'text-warning'">
+                {{ balance >= 0 ? '+' : '' }}{{ formatCurrency(balance) }}
+              </p>
+            </div>
           </div>
         </div>
       </div>

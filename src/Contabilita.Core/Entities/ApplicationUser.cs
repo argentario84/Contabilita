@@ -24,4 +24,5 @@ public class ApplicationUser : IdentityUser
     public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     public virtual ICollection<Caregiver> Caregivers { get; set; } = new List<Caregiver>();
     public virtual ICollection<ChildcareSlot> ChildcareSlots { get; set; } = new List<ChildcareSlot>();
+    public virtual ICollection<DebtCredit> DebtCredits { get; set; } = new List<DebtCredit>();
 }

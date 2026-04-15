@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
     public DbSet<Caregiver> Caregivers => Set<Caregiver>();
     public DbSet<ChildcareSlot> ChildcareSlots => Set<ChildcareSlot>();
+    public DbSet<DebtCredit> DebtCredits => Set<DebtCredit>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -134,6 +135,22 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(s => new { s.UserId, s.WeekStartDate, s.DayOfWeek, s.TimeSlot }).IsUnique();
+        });
+
+        builder.Entity<DebtCredit>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.PersonName).IsRequired().HasMaxLength(200);
+            entity.Property(d => d.Description).IsRequired().HasMaxLength(500);
+            entity.Property(d => d.Amount).HasPrecision(18, 2);
+            entity.Property(d => d.Notes).HasMaxLength(1000);
+
+            entity.HasOne(d => d.User)
+                .WithMany(u => u.DebtCredits)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(d => new { d.UserId, d.IsSettled, d.DueDate });
         });
     }
 

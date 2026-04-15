@@ -19,12 +19,14 @@
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/vue3": "^6.1.20",
     "@vueuse/core": "^14.0.0",
+    "apexcharts": "^5.10.6",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "vue3-apexcharts": "^1.11.1"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
